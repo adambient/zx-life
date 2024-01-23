@@ -9,10 +9,6 @@ CELL_ACTIVE: equ $03
 ; alters: all registers
 ;----------
 draw_grid:
-            pop hl ; hl = ret address
-            pop de ; e = ink, d = paper
-            push hl ; ret address back on stack
-
             ld hl, active_cell_count
             ld (hl), $00 ; active_cell_count = 0
 
@@ -34,19 +30,9 @@ draw_grid_loop:
             push de ; store ink
 
             push de ; store ink
-            ; get x coord
-            push bc ; store cell_location
-            call get_cell_x_coord ; hl = x coord
-            ld e, l ; e = x
-            pop bc ; restore cell_location
 
-            ; get y coord
-            push de ; store x, y
-            push bc ; store cell_location
-            call get_cell_y_coord ; hl = y coord
-            pop bc ; restore cell_location            
-            pop de ; restore x, y
-            ld d, l ; e = y            
+            ld d, b ; d = y
+            ld e, c ; e = x
 
             ; get grid value
             push de ; store x,y
@@ -97,49 +83,18 @@ draw_grid_cell_dead:
             
             res CELL_DIES, c ; clear_bit
 draw_grid_loop_end:
-            push bc ; pass grid_value
-            push de ; pass x,y
+
+            push de ; store x,y
             call set_grid_value
+            pop de ; restore x,y
+            
+            call update_active_cells
+            xor a ; TODO - it's still a bit of mystery to me why I need to do this
 
             pop de ; restore ink
             pop hl ; restore pointer
             pop bc ; restore counter
-
             djnz draw_grid_loop
-            call update_all_active_cells
-            ret
-
-update_all_active_cells:
-            ld hl, updated_cell_count           
-            ld b, (hl) ; counter = updated_cell_count
-            ld hl, updated_cells ; pointer to array
-update_all_active_cells_loop:
-            push bc ; store counter
-            ld c, (hl)
-            inc hl
-            ld b, (hl) ; bc = cell_location
-            inc hl
-            push hl ; store pointer
-
-            ; get x coord
-            push bc ; store cell_location
-            call get_cell_x_coord ; hl = x coord
-            ld e, l ; e = x
-            pop bc ; restore cell_location
-
-            ; get y coord
-            push de ; store x, y
-            call get_cell_y_coord ; hl = y coord
-            pop de ; restore x, y
-            ld d, l ; e = y
-
-            push af
-            call update_active_cells
-            pop af
-
-            pop hl ; restore pointer
-            pop bc ; restore counter
-            djnz update_all_active_cells_loop
             ret
 
 ;----------
@@ -214,22 +169,15 @@ update_active_cell:
             add hl, bc ; hl = pointer to arrary
             pop de ; retrieve x,y
 
-            push hl ; store pointer            
-            call get_cell_location ; hl = cell_location
-            ex de, hl ; de = cell_location            
-            pop hl ; retrieve pointer
-
             ld (hl), e
             inc hl
-            ld (hl), d ; active_cells[active_cell_count] = cell_location                
+            ld (hl), d ; active_cells[active_cell_count] = y+x                
 
             pop bc ; restore grid value
             pop de ; restore grid x, y            
             set CELL_ACTIVE, c ; set grid_value to active
 
             push de ; store x,y
-            push bc ; pass grid value
-            push de ; pass x,y
             call set_grid_value ; grid value updated
             pop de ; restore x,y
             ret
@@ -277,17 +225,8 @@ update_cell_state:
             ld b, d ; bc = cell_location
             push bc ; store cell_location
 
-            push bc ; store cell_location
-            call get_cell_y_coord ; hl = y coord
-            ld d, l ; d = y
-            pop bc ; restore cell_location
-
-            push de ; store x, y
-            push bc ; store cell_location
-            call get_cell_x_coord ; hl = x coord            
-            pop bc ; restore cell_location            
-            pop de ; restore x, y
-            ld e, l ; e = x
+            ld d, b ; d = y
+            ld e, c ; e = x
 
             push de ; store x,y
             call get_neighbour_count ; hl = neighbour count
@@ -304,8 +243,8 @@ update_cell_state:
             call resolve_grid_value ; hl = resolved grid value
 
             push hl ; store grid value
-            push hl ; pass grid value
-            push de ; pass xy
+            ld b, h
+            ld c, l ; bc = grid value
             call set_grid_value ; set grid value
             pop hl ; restore grid value
 
@@ -448,11 +387,6 @@ resolve_grid_value_was_dead:
 ; alters: a, bc, de, hl
 ;----------
 draw_chr_at:
-            pop hl ; hl = ret address
-            pop de ; d = y, e = x
-            pop bc ; c = character code
-            push hl ; ret address back on stack
-
             ; load hl with memory address of character glyph
             ld h, $00 ; make sure h is 00
             ld l, c ; hl = character code
@@ -525,15 +459,10 @@ add_cell:
             push de ; store d = y, e = x as destroyed by call
             ld b, $00
             ld c, a ; bc = grid value
-            push bc ; pass grid value first (last parameter)
-            push de ; pass x and y            
             call set_grid_value ;
             pop de ; restore d = y, e = x
 
-            call get_cell_location ; hl = cell location
-
-            ; updated_cells[updated_cell_count] = cell_location;
-            ex de, hl ; de = cell location            
+            ; updated_cells[updated_cell_count] = y+x
             ld bc, updated_cells
             ld hl, updated_cell_count
             push de
@@ -550,4 +479,4 @@ add_cell:
             ret
 
 include "grid.asm"
-include "output.asm"
+include "screen.asm"

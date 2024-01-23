@@ -1,7 +1,7 @@
 ; CONSTANTS
 COMPRESSED_GRID_WIDTH: equ $10 ; half of GRID_WIDTH rounded up to next even number (16)
-GRID_HEIGHT: equ $17 ; 23
-GRID_WIDTH: equ $1f ; 31
+GRID_HEIGHT: equ $18 ; 24
+GRID_WIDTH: equ $20 ; 32
 MAX_ACTIVE_CELLS: equ $ff ; 255
 
 ;----------
@@ -36,10 +36,12 @@ get_grid_value_end:
 ; alters: a, bc, de, hl
 ;----------
 set_grid_value:
-            pop hl ; hl = ret address
-            pop bc ; b = y, c = x
-            pop de ; e = grid value
-            push hl ; ret address back on stack
+            ld b, d ; b = y
+            ld d, e ; d = x
+            ld e, c ; e = grid value
+            ld c, d ; c = x
+            ld d, $00 ; de = grid value
+
             ld a, e ; a = grid value
             ex af, af' ; store a
             call load_cell_location ; load cell location bc into hl
@@ -81,93 +83,12 @@ load_cell_location:
             add hl, de ; hl = _grid + x/2
             ;ld d, $00 - already 0
             ld e, b ; de = y           
-            ld b, COMPRESSED_GRID_WIDTH ; load b to loop COMPRESSED_GRID_WIDTH times
-load_cell_location_loop: 
-            add hl, de
-            djnz load_cell_location_loop ; hl = _grid + (x / 2) + (y * COMPRESSED_GRID_WIDTH)
-            ret
-
-;----------
-; get_cell_location
-; inputs: d = y, e = x
-; outputs: hl = cell location within grid = (y * GRID_WIDTH) + x + 1
-; alters: a, bc, de, hl
-;----------
-get_cell_location:
-            ld l, $00
-            ld h, $00
-            ld c, e ; c = x
-            ld e, d
-            ld d, $00 ; de = y
-            ld b, GRID_WIDTH
-get_cell_location_loop:
-            add hl, de
-            djnz get_cell_location_loop
-            ld e, c ; de - x
-            add hl, de
-            inc hl
-            ret
-
-;----------
-; get_cell_x_coord
-; inputs: bc = cell location
-; outputs: hl = x coord = (cell_location % GRID_WIDTH) - 1
-; alters: a, bc, de, hl
-;----------
-get_cell_x_coord:
-            ld d, $00
-            ld e, GRID_WIDTH ; de = GRID_WIDTH
-            ld hl, $00    ; accumulator
-            ld a, $10    ; loop counter
-get_cell_x_coord_loop:
-            ; shift the bits from bc (numerator) into hl (accumulator)
-            sla c
-            rl b
-            adc hl,hl
-            ; check if remainder >= denominator (hl>=de)
-            sbc hl,de
-            jr c, get_cell_x_coord_loop_readjust
-            inc c
-            jr get_cell_x_coord_loop_done
-get_cell_x_coord_loop_readjust:
-            ; remainder is not >= denominator, so we have to add de back to hl
-            add hl, de
-get_cell_x_coord_loop_done:
-            dec a
-            jr nz, get_cell_x_coord_loop
-            dec hl ; hl = (cell_location % GRID_WIDTH) - 1
-            ret
-
-PUBLIC get_cell_y_coord
-;----------
-; get_cell_y_coord
-; inputs: bc = cell location
-; outputs: hl = y coord = (cell_location / GRID_WIDTH)
-; alters: a, bc, de, hl
-;----------
-get_cell_y_coord:
-            ld d, $00
-            ld e, GRID_WIDTH ; de = GRID_WIDTH
-            ld hl, $00 ; accumulator
-            ld a, $10 ; loop counter
-get_cell_y_coord_loop:
-            ; shift the bits from bc (numerator) into hl (accumulator)
-            sla c
-            rl b
-            adc hl, hl
-            ; check if remainder >= denominator (hl>=de)
-            sbc hl, de
-            jr c, get_cell_y_coord_loop_readjust
-            inc c
-            jr get_cell_y_coord_loop_done
-get_cell_y_coord_loop_readjust:
-            ; remainder is not >= denominator, so we have to add de back to hl
-            add hl, de
-get_cell_y_coord_loop_done:
-            dec a
-            jr nz, get_cell_y_coord_loop
-            ld h, b
-            ld l, c ; hl = cell_location / GRID_WIDTH
+            ex de, hl ; hl = y
+            add hl, hl
+            add hl, hl
+            add hl, hl
+            add hl, hl ; hl = y * COMPRESSED_GRID_WIDTH(=16)
+            add hl, de ; hl _grid + (x / 2) + (y * COMPRESSED_GRID_WIDTH)
             ret
 
 grid: ds COMPRESSED_GRID_WIDTH*GRID_HEIGHT

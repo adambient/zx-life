@@ -1,4 +1,4 @@
-org  $5e88
+org  $5dad
 
 ; CONSTANTS
 KEYDEL: equ $0c ; ASCII value for delete
@@ -9,6 +9,10 @@ LAST_KEY: equ $5c08 ; ROM address for last key pressed when using im1
 CURSOR: equ $5c88 ; ROM address for cursor position on screen channel 1 - if loaded at bc then b = y, c = x
 LOCATE: equ $0dd9 ; ROM address for AT routine to position the cursor
 MAX_MSG_LENGTH: equ $ff ; the maximum message length is 255
+
+MAX_CHAR_COUNT: equ $14 ; max wait between chars is 20
+MIN_CHAR_COUNT: equ $04 ; min wait between chars is 4
+MIN_ACTIVITY: equ $0a ; min activity between chars is 10
 
 main:
             call clear_screen
@@ -22,12 +26,14 @@ main:
             ld ix, count
             ld (ix), $00 ; count = 0
 main_loop:
-            ld a, l
-            sub	$0a ; is update_cell_count < 10
-            jr c, main_add_character ; yes, add character
-            ld a, (ix)
-            sub $14 ; is count < 20
-            jr nz, main_cycle_ink ; no, bypass add character
+            ld a, (ix) ; a = count
+            cp MIN_CHAR_COUNT ; is count >= MIN_CHAR_COUNT?
+            jr c, main_cycle_ink ; no, bypass add character
+            cp MAX_CHAR_COUNT ; is count >= MAX_CHAR_COUNT?
+            jr nc, main_add_character ; yes, add character
+            ld a, l ; a = updated_cell_count
+            cp MIN_ACTIVITY ; is update_cell_count < MIN_ACTIVITY
+            jr nc, main_cycle_ink ; no, bypass add character
 main_add_character:
             ld (ix), $00 ; count = 0
             ld de, message+0
@@ -48,12 +54,10 @@ main_reset_message:
             jr nz, main_add_character_do ; no, skip
             ld a, $5f ; yes, set to '_'
 main_add_character_do:
-            ld d, $00
             push bc ; store ink, message_index
-            ld e, a ; e = current char
-            push de ; pass char
+            ld b, $00
+            ld c, a ; bc = current char
             ld de,$080a ; x = 10, y = 8
-            push de ; pass x,y
             call draw_chr_at ; draw char
             pop bc ; pop ink, message_index
 main_cycle_ink:
@@ -64,9 +68,8 @@ main_cycle_ink:
             ld b, $01 ; yes, reset
 main_draw_grid:
             push bc ; store ink, message_index
-            ld c, b ; c = ink
-            ld b, $07 ; b = paper
-            push bc ; pass paper, ink
+            ld e, b ; e = ink
+            ld d, $07 ; d = paper
             call draw_grid
             call iterate_grid
             pop bc ; pop ink, message_index
@@ -175,3 +178,5 @@ count: ds 1
 message: ds MAX_MSG_LENGTH+1
 message_prompt:
 db "Welcome To ZX Life!", KEYENT, KEYENT, "Please enter message to display,maximum 255 characters:", KEYENT, KEYENT, $00
+
+end $5dad
