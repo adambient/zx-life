@@ -19,7 +19,7 @@ main:
             ld hl, message_prompt
             call  print_string
             call get_message
-            call clear_screen
+            call init_game_screen
             ld c, $00 ; message_index
             ld l, $00 ; updated_cell_count = 0
             ld b, $00 ; ink = 0

@@ -1,3 +1,5 @@
+UDG: equ $5c7b ; RAM address of user defined graphics
+OPEN_CHANNEL: equ $1601
 VIDEORAM: equ $4000 ; address of video RAM
 VIDEORAM_L: equ $1800 ; length of video RAM
 VIDEOATT: equ $5800 ; address of attribute RAM
@@ -37,17 +39,58 @@ clear_screen:
             ret
 
 ;----------
+; reset_cursor
+; ensures next call to rst $10 is at 0, 0 of current channel
+; alters: af
+;----------
+reset_cursor:
+            ld a, $16
+            rst $10
+            ld a, $00
+            rst $10
+            rst $10 ; reset position
+            ret
+
+;----------
+; init_game_screen
+; initialises the screen for the game
+; alters: bc, de, hl
+;----------
+init_game_screen: 
+            ld hl, cell_sprite
+            ld ($5c7b), hl ; load cell_sprite into position 1 of UDGs so can use ROM routine            
+            ; clear attributes to avoid flicker of ROM print
+            ld hl, VIDEOATT ; hl = attribute RAM address
+            ld de, VIDEOATT+1 ; de = next address
+            ld bc, VIDEOATT_L-1 ; bc = length of attribute RAM - 1 (to loop)
+            ld (hl), %00111111 ; paper white, ink white
+            ldir ; loop and set the rest      
+            ; load first 22 rows (channel 2)
+            call reset_cursor
+            ld b, 22
+init_game_screen_loop:
+            ld hl, screen_data
+            call  print_string
+            djnz init_game_screen_loop
+            ; load last 2 rows  (channel 1)
+            ld a, 1
+            call OPEN_CHANNEL ; ROM routine
+            call reset_cursor                        
+            ld hl, screen_data
+            call  print_string
+            ld hl, screen_data
+            call  print_string
+            ret
+
+;----------
 ; clear_cell_at
 ; inputs: d = y, e = x
 ; alters: a, bc, de
 ;----------
 clear_cell_at:
             call get_attr_address
-            ld (hl), %00111000 ; paper white
+            ld (hl), %00111111 ; paper white, ink white
             ex de, hl ; h = y, l = x
-            call get_char_address
-            ld de, clear_sprite ; h = y, l = x, de = address of glyph
-            call print_char_at
             ret
 
 ;----------
@@ -66,44 +109,24 @@ print_cell_at:
             rla
             or c
             ld (hl), a ; set attribute value
-
-            ex de, hl ; h = y, l = x
-            call get_char_address
-            ld de, cell_sprite ; h = y, l = x, de = address of glyph
-            call print_char_at
-            ret
-
-;----------
-; print_char_at
-; inputs: h = y, l = x, de = location of char
-; alters: a, bc, de, hl
-;----------
-print_char_at:
-            ld b, 8 ; loop counter
-print_char_at_loop:
-            ld a, (de) ; get the byte
-            ld (hl), a ; print to screen
-            inc de ; goto next byte of character
-            inc h ; goto next line of screen
-            djnz print_char_at_loop ; loop 8 times
             ret
 
 ;----------
 ; print_block_at
-; inputs: d = y, e = x, h = paper
+; inputs: d = y, e = x, h = ink, l = paper
 ; alters: a, bc, de
 ;----------
-print_block_at:           
-            ld c, l ; c = paper
+print_block_at:
+            ld b, l ; b = paper
             call get_attr_address
-            ld a, c ; a = ink
+            ld a, b ; a = paper
+            or a ; clear flags
+            rla
+            rla
+            rla
+            or b ; use paper colour for ink
             or %01000000 ; bright
             ld (hl), a ; set attribute value
-            
-            ex de, hl ; h = y, l = x
-            call get_char_address
-            ld de, block_sprite ; h = y, l = x, de = address of glyph
-            call print_char_at
             ret
 
 ;----------
@@ -160,22 +183,6 @@ cell_sprite:
             defb %10101010
             defb %01010101
 
-block_sprite:
-            defb %11111111
-            defb %11111111
-            defb %11111111
-            defb %11111111
-            defb %11111111
-            defb %11111111
-            defb %11111111
-            defb %11111111
-
-clear_sprite:
-            defb %00000000
-            defb %00000000
-            defb %00000000
-            defb %00000000    
-            defb %00000000
-            defb %00000000
-            defb %00000000
-            defb %00000000
+screen_data:
+db $10, $07, $11, $07 ; ink white, paper white
+db $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $90, $00
