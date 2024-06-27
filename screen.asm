@@ -130,27 +130,6 @@ print_block_at:
             ret
 
 ;----------
-; get_char_address - adapted from a routine by Dean Belfield
-; inputs: h = y, l = x
-; outputs: hl = location of screen address
-; alters: hl
-;----------
-get_char_address:
-            ld a,h
-            and $07
-            rra
-            rra
-            rra
-            rra
-            or l
-            ld l,a
-            ld a,h
-            and $18
-            or $40
-            ld h,a
-            ret	
-
-;----------
 ; get_attr_address - adapted from a routine by Jonathan Cauldwell
 ; inputs: d = y, e = x
 ; outputs: hl = location of attribute address
