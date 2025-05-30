@@ -16,16 +16,14 @@ get_grid_value:
             call load_cell_location            
             ld a, (hl) ; load 8 bit value into a
             bit $00, c ; is x even?
-            jr z, get_grid_value_even
+            jr z, get_grid_value_end
             or a ; clear carry so doesn't get rotated into number
             rra
             rra
             rra
             rra ; rotate the last 4 bits to the first 4
-            jr get_grid_value_end
-get_grid_value_even:
-            and $0f ; blank out the last 4 bits
 get_grid_value_end:
+            and $0f ; blank out the last 4 bits
             ld h, $00
             ld l, a ; hl = grid value
             ret
