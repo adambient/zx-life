@@ -1,24 +1,35 @@
-org  $5dad
+org  28672
 
 ; CONSTANTS
-KEYDEL: equ $0c ; ASCII value for delete
-KEYENT: equ $0d ; ASCII value for enter
-KEYSPC: equ $20 ; ASCII value for space
-FLAGS_KEY: equ $5c3b ; ROM address for keypad status when using im1
-LAST_KEY: equ $5c08 ; ROM address for last key pressed when using im1
-CURSOR: equ $5c88 ; ROM address for cursor position on screen channel 1 - if loaded at bc then b = y, c = x
-LOCATE: equ $0dd9 ; ROM address for AT routine to position the cursor
 MAX_MSG_LENGTH: equ $ff ; the maximum message length is 255
-
 MAX_CHAR_COUNT: equ $14 ; max wait between chars is 20
 MIN_CHAR_COUNT: equ $04 ; min wait between chars is 4
 MIN_ACTIVITY: equ $0a ; min activity between chars is 10
+DEFADD: equ 23563 ; location of parameters via BASIC DEF FN
 
 main:
+            ; BEGIN - load parameters via BASIC DEF FN which populates parameters at DEFADD
+            ld hl, (DEFADD)
+            inc hl
+            inc hl
+            inc hl
+            inc hl
+            ld e, (hl)
+            inc hl
+            ld d, (hl) ; de = location of string
+            inc hl
+            ld c, (hl)
+            inc hl
+            ld b, (hl) ; bc = length of string
+            ; END - load parameters
+
+            ; populate message
+            ld (count), bc            
+            ld hl, message
+            ex de, hl ; de = address of message, hl = location of string
+            ldir
+
             call clear_screen
-            ld hl, message_prompt
-            call  print_string
-            call get_message
             call init_game_screen
             ld c, $00 ; message_index
             ld l, $00 ; updated_cell_count = 0
@@ -77,106 +88,9 @@ main_draw_grid:
             jr main_loop ; loop
             ret ; never gets hit
 
-;----------
-; get_message_asm
-; reads keyboard for message to display, populating _message
-; alters: af, bc, de, hl
-;----------
-get_message:
-            ld hl, message ; hl = address of message
-            ld (hl), $00        
-            ld d, $00 ; d = tracks the mssage length
-            ei ; enable interrupts (mode 1) so we can use ROM input routines
-            call get_message_loop
-            di ; disable interrupts again
-            ret
-get_message_loop:
-            push hl ; preserve hl
-            call wait_key ; wait for valid key
-            pop hl ; retrieve hl
-            cp KEYDEL ; delete?
-            jr z, get_message_delete ; yes, goto delete
-            cp KEYENT ; enter?
-            jr z, get_message_enter ; yes, goto enter
-            push de ; preserves de
-            ld e, a ; e = code ASCII
-            ld a, MAX_MSG_LENGTH ; a = maximum message length
-            cp d ; d = maximum length?
-            ld a, e ; a = code ASCII
-            pop de ; retrieve de
-            jr z, get_message_loop ; d = maximum length so loop without appending
-            ld (hl), a ; append character to name
-            inc hl ; hl = next position
-            rst $10 ; print character
-            inc d ; increment message length counter
-            jr get_message_loop ; wait for next character
-get_message_delete:
-            ld a, $00 ; a = 0
-            cp d ; length 0?
-            jr z, get_message_loop ; yes, wait for next character
-            dec d ; decrement message length counter
-            dec hl ; hl-=1, previous character
-            ld a, ' ' ; a = space
-            ld (hl), a ; clear previous character
-            ld bc, (CURSOR) ; bc = cursor position
-            inc c ; bc = previous column for AT
-            call AT ; position cursor
-            rst $10 ; delete the display character	
-            call AT ; position cursor
-            jr get_message_loop ; wait for next character
-get_message_enter:
-            ld a, 0 ; a = 0
-            cp d ; length 0?
-            jr z, get_message_loop ; yes, request another character
-            ret ; exit with populated message
-
-;----------
-; wait_key
-; outputs: a = ASCII code of the next pressed key
-; alters: af, hl
-;----------
-wait_key:
-            ld hl, FLAGS_KEY ; hl = address flag keyboard
-            set $03, (hl) ; input mode L
-wait_key_loop:
-            bit $05, (hl) ; key pressed?
-            jr z, wait_key_loop ; not pressed, loop
-            res $05, (hl) ; bit set to 0 for future inspections
-wait_key_load_key:
-            ld hl, LAST_KEY ; hl = last key pressed address
-            ld a, (hl) ; a = last key pressed
-            cp $80 ; ASCII > 127?
-            jr nc, wait_key ; yes, invalid key, loop
-            cp KEYDEL ; delete?
-            ret z ; yes, exit
-            cp KEYENT ; enter?
-            ret z ; yes, exit
-            cp KEYSPC ; space?
-            jr c, wait_key ; ASCII < space, invalid, loop
-            ret ; exits
-
-;----------
-; AT
-; position the cursor while maintaining registers - the upper corner is at 24, 33
-; inputs: b = y, c = x
-;----------
-AT:
-            push af
-            push bc
-            push de
-            push hl ; preserve registers
-            call LOCATE ; position cursor using ROM routine
-            pop hl
-            pop de
-            pop bc
-            pop af ; retrieves records
-            ret
-
 include "game.asm"
 
 count: ds 1
 message: ds MAX_MSG_LENGTH+1
-message_prompt:
-db "Welcome To ZX Life!", KEYENT, KEYENT, "Please enter message to display,maximum 255 characters:", KEYENT, KEYENT, $00
 
-end $5dad
+end 28672

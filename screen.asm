@@ -58,7 +58,7 @@ reset_cursor:
 ;----------
 init_game_screen: 
             ld hl, cell_sprite
-            ld ($5c7b), hl ; load cell_sprite into position 1 of UDGs so can use ROM routine            
+            ld (UDG), hl ; load cell_sprite into position 1 of UDGs so can use ROM routine            
             ; clear attributes to avoid flicker of ROM print
             ld hl, VIDEOATT ; hl = attribute RAM address
             ld de, VIDEOATT+1 ; de = next address
