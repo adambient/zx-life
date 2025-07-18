@@ -7,7 +7,6 @@ MIN_CHAR_COUNT: equ $04 ; min wait between chars is 4
 MIN_ACTIVITY: equ $0a ; min activity between chars is 10
 DEFADD: equ 23563 ; location of parameters via BASIC DEF FN
 
-main:
             ; BEGIN - load parameters via BASIC DEF FN which populates parameters at DEFADD
             ld hl, (DEFADD)
             inc hl
@@ -29,8 +28,6 @@ main:
             ex de, hl ; de = address of message, hl = location of string
             ldir
 
-            call clear_screen
-            call init_game_screen
             ld c, $00 ; message_index
             ld l, $00 ; updated_cell_count = 0
             ld b, $00 ; ink = 0

@@ -1,14 +1,26 @@
 @begin:
+REM zx-life by ambientcoder 2023
+REM load UDGs
+LET i = USR "a" : LET t = i+7 : FOR x = i TO t : READ y : POKE x, y : NEXT x
 CLEAR 28671
 LOAD ""CODE
-REM main()
-DEF FN M(string$) = USR 28672
+REM game of life machine code routine
+DEF FN G(string$) = USR 28672
 
 @main:
 CLS
 PRINT AT 0, 0; "Welcome To ZX Life!"; AT 2, 0; "Please enter message to display,maximum 255 characters:"
 INPUT LINE a$
-# reset cursor position
-PRINT AT 0, 0; ""
 IF LEN a$ > 255 THEN GO TO @main
-RANDOMIZE FN M(a$)
+# fill screen with invisible hashes
+INK 7 : PAPER 7 : CLS
+FOR x = 0 TO 21
+PRINT AT x, 0; "\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a"
+NEXT x
+PRINT #1; AT 0, 0; INK 7; PAPER 7; "\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a"
+PRINT #1; AT 1, 0; INK 7; PAPER 7; "\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a\a"
+# begin game of life
+RANDOMIZE FN G(a$)
+
+# UDG
+DATA 170, 85, 170, 85, 170, 85, 170, 85
