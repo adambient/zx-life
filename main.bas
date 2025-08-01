@@ -1,10 +1,13 @@
 @begin:
-REM zx-life by ambientcoder 2023
-REM load UDGs
+# zx-life by ambientcoder 2023
+# load UDGs
 LET i = USR "a" : LET t = i+7 : FOR x = i TO t : READ y : POKE x, y : NEXT x
+# load machine code
 CLEAR 28671
 LOAD ""CODE
-REM game of life machine code routine
+# load interrupts
+LOAD ""CODE 32348
+# game of life machine code routine
 DEF FN G(string$) = USR 28672
 
 @main:

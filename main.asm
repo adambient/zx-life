@@ -1,5 +1,12 @@
 org  28672
 
+; initialize interrupts
+di ; disables interrupts
+ld a, $28 ; a = 40
+ld i, a ; i = a
+im 2 ; mode 2 interrupts
+ei ; enable interrupts
+
 ; CONSTANTS
 MAX_MSG_LENGTH: equ $ff ; the maximum message length is 255
 MAX_CHAR_COUNT: equ $14 ; max wait between chars is 20
