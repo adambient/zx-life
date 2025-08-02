@@ -42,11 +42,12 @@ DEFADD: equ 23563 ; location of parameters via BASIC DEF FN
             ld (ix), $00 ; count = 0
 main_loop:
             ld a, (ix) ; a = count
+            call play_beep
             cp MIN_CHAR_COUNT ; is count >= MIN_CHAR_COUNT?
             jr c, main_cycle_ink ; no, bypass add character
             cp MAX_CHAR_COUNT ; is count >= MAX_CHAR_COUNT?
             jr nc, main_add_character ; yes, add character
-            ld a, l ; a = updated_cell_count
+            ld a, l ; a = updated_cell_count            
             cp MIN_ACTIVITY ; is update_cell_count < MIN_ACTIVITY
             jr nc, main_cycle_ink ; no, bypass add character
 main_add_character:
@@ -85,7 +86,7 @@ main_draw_grid:
             push bc ; store ink, message_index
             ld e, b ; e = ink
             ld d, $07 ; d = paper
-            call draw_grid
+            call draw_grid            
             call iterate_grid
             pop bc ; pop ink, message_index
             inc (ix) ; increase count
@@ -93,6 +94,7 @@ main_draw_grid:
             ret ; never gets hit
 
 include "game.asm"
+include "beep.asm"
 
 count: ds 1
 message: ds MAX_MSG_LENGTH+1
