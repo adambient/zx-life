@@ -1,3 +1,5 @@
+include "consts.asm"
+
 org  28672
 
 ; initialize interrupts
@@ -12,7 +14,6 @@ MAX_MSG_LENGTH: equ $ff ; the maximum message length is 255
 MAX_CHAR_COUNT: equ $14 ; max wait between chars is 20
 MIN_CHAR_COUNT: equ $04 ; min wait between chars is 4
 MIN_ACTIVITY: equ $0a ; min activity between chars is 10
-DEFADD: equ 23563 ; location of parameters via BASIC DEF FN
 
             ; BEGIN - load parameters via BASIC DEF FN which populates parameters at DEFADD
             ld hl, (DEFADD)
@@ -28,6 +29,10 @@ DEFADD: equ 23563 ; location of parameters via BASIC DEF FN
             inc hl
             ld b, (hl) ; bc = length of string
             ; END - load parameters
+
+            ; default next border colour to white
+            ld a, 7
+            ld (BORDER), a
 
             ; populate message
             ld (count), bc            

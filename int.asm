@@ -1,3 +1,5 @@
+include "consts.asm"
+
 org  $7e5c
 
 int:
@@ -25,7 +27,7 @@ int:
             ld (hl), 100 ; reset count
 
             ; cycle border
-            ld hl, int_colour ; load border colour
+            ld hl, BORDER ; load border colour
             ld a, (hl) ; into a
             out (254), a ; set border
             dec (hl) ; decrease border colour
@@ -53,4 +55,3 @@ ei ; activates interruptions
 reti ; exits
 
 int_count:  db 100 ; count between change border colour
-int_colour: db 6 ; current border colour
