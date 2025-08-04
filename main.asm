@@ -46,16 +46,15 @@ MIN_ACTIVITY: equ $0a ; min activity between chars is 10
             ld ix, count
             ld (ix), $00 ; count = 0
 main_loop:
-            ld a, (ix) ; a = count
-            call play_beep
+            ld a, (ix) ; a = count            
             cp MIN_CHAR_COUNT ; is count >= MIN_CHAR_COUNT?
             jr c, main_cycle_ink ; no, bypass add character
             cp MAX_CHAR_COUNT ; is count >= MAX_CHAR_COUNT?
             jr nc, main_add_character ; yes, add character
-            ld a, l ; a = updated_cell_count            
+            ld a, l ; a = updated_cell_count                              
             cp MIN_ACTIVITY ; is update_cell_count < MIN_ACTIVITY
             jr nc, main_cycle_ink ; no, bypass add character
-main_add_character:
+main_add_character:            
             ld (ix), $00 ; count = 0
             ld de, message+0
             ld l, c ; l = message_index
@@ -90,9 +89,11 @@ main_cycle_ink:
 main_draw_grid:
             push bc ; store ink, message_index
             ld e, b ; e = ink
-            ld d, $07 ; d = paper
+            ld d, $07 ; d = paper            
             call draw_grid            
             call iterate_grid
+            ld a, l ; a = updated_cell_count      
+            call play_beep
             pop bc ; pop ink, message_index
             inc (ix) ; increase count
             jr main_loop ; loop
