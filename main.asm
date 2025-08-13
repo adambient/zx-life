@@ -2,9 +2,14 @@ include "consts.asm"
 
 org  28672
 
+; initialize mixer to all notes but no noises
+ld a, 7
+ld h, %00111000
+call tracker_psg
+
 ; initialize interrupts
 di ; disables interrupts
-ld a, $28 ; a = 40
+ld a, $28 ; a = 40 (specifies address)
 ld i, a ; i = a
 im 2 ; mode 2 interrupts
 ei ; enable interrupts
@@ -30,10 +35,6 @@ MIN_ACTIVITY: equ $0a ; min activity between chars is 10
             ld b, (hl) ; bc = length of string
             ; END - load parameters
 
-            ; default next border colour to white
-            ld a, 7
-            ld (BORDER), a
-
             ; populate message
             ld (count), bc            
             ld hl, message
@@ -46,7 +47,7 @@ MIN_ACTIVITY: equ $0a ; min activity between chars is 10
             ld ix, count
             ld (ix), $00 ; count = 0
 main_loop:
-            ld a, (ix) ; a = count            
+            ld a, (ix) ; a = count              
             cp MIN_CHAR_COUNT ; is count >= MIN_CHAR_COUNT?
             jr c, main_cycle_ink ; no, bypass add character
             cp MAX_CHAR_COUNT ; is count >= MAX_CHAR_COUNT?
@@ -92,17 +93,18 @@ main_draw_grid:
             ld d, $07 ; d = paper            
             call draw_grid            
             call iterate_grid
-            ld a, l ; a = updated_cell_count      
-            call play_beep
+            ld a, l ; a = updated_cell_count                  
             pop bc ; pop ink, message_index
             inc (ix) ; increase count
             jr main_loop ; loop
             ret ; never gets hit
 
 include "game.asm"
-include "beep.asm"
 
 count: ds 1
 message: ds MAX_MSG_LENGTH+1
 
-end 28672
+include "tracker.asm" ; ay music tracker
+
+org 32348 ; interrupt code at specified (above) address
+include "int.asm"

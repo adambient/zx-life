@@ -1,57 +1,37 @@
-include "consts.asm"
-
-org  $7e5c
-
 int:
-            ; save all registers (comment out unused)
-            ;push af
-            ;push hl
-            ;push bc
-            ;push de
-            ;push ix
-            ;push iy
-            ;exx
-            ;ex af, af'
+            ; save all registers
             push af
             push hl
-            ;push bc
-            ;push de
+            push bc
+            push de
+            push ix
+            push af
+            ex af,af'
+            push af
 
             ; BEGIN - interrupt routine
-
-            ; wait for 100 ticks
+            ; wait for tracker_note_wait ticks
             ld hl, int_count ; load count
             ld a, (hl) ; into a
             dec (hl) ; decrease count
             jr nz, int_end ; end if not zero
-            ld (hl), 100 ; reset count
+            ld (hl), tracker_note_wait ; reset count            
 
-            ; cycle border
-            ld hl, BORDER ; load border colour
-            ld a, (hl) ; into a
-            out (254), a ; set border
-            dec (hl) ; decrease border colour
-            jr nz, int_end ; return if not zero
-            ld (hl), 7 ; reset border colour
-
+            call tracker_play ; call tracker to play next notes
             ; END - interrupt routine
 
 int_end:
             ; retrieve all saved registers
-            ;pop de
-            ;pop bc
+            pop af
+            ex af,af'
+            pop af
+            pop ix
+            pop de
+            pop bc
             pop hl
             pop af
-            ;ex af, af'
-            ;exx
-            ;pop iy
-            ;pop ix
-            ;pop de
-            ;pop bc
-            ;pop hl
-            ;pop af
 
 ei ; activates interruptions
 reti ; exits
 
-int_count:  db 100 ; count between change border colour
+int_count:  db tracker_note_wait ; count between notes

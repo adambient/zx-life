@@ -5,12 +5,11 @@ LET i = USR "a" : LET t = i+7 : FOR x = i TO t : READ y : POKE x, y : NEXT x
 # load machine code
 CLEAR 28671
 LOAD ""CODE
-# load interrupts
-LOAD ""CODE 32348
 # game of life machine code routine
 DEF FN G(string$) = USR 28672
 
 @main:
+
 CLS
 PRINT AT 0, 0; "Welcome To ZX Life!"; AT 2, 0; "Please enter message to display,maximum 255 characters:"
 INPUT LINE a$
