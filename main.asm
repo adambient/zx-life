@@ -1,6 +1,6 @@
 include "consts.asm"
 
-org  28672
+org  28160
 
 ; initialize mixer to all notes but no noises
 ld a, 7
@@ -84,13 +84,13 @@ main_add_character_do:
 main_cycle_ink:
             inc b ; inc ink
             ld a, b
-            sub $07 ; is it 7?
+            sub $08 ; is it 7?
             jr nz, main_draw_grid ; no, skip
             ld b, $01 ; yes, reset
 main_draw_grid:
             push bc ; store ink, message_index
             ld e, b ; e = ink
-            ld d, $07 ; d = paper            
+            ld d, $00 ; d = paper            
             call draw_grid            
             call iterate_grid
             ld a, l ; a = updated_cell_count                  

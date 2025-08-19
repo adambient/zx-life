@@ -5,7 +5,7 @@
 ;----------
 clear_cell_at:
             call get_attr_address
-            ld (hl), %00111111 ; paper white, ink white
+            ld (hl), %00000000 ; paper black, ink black
             ex de, hl ; h = y, l = x
             ret
 
