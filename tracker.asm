@@ -3,17 +3,17 @@ tracker_note_wait: equ 9 ; wait 0.18 seconds between notes (PAL)
 tracker_reset_notes:
             ; set all current notes to beginning of scores
             ld hl, tracker_channel1_note
-            ld de, tracker_channel1_score
+            ld de, tracker_channel1_score - 2 ; first new note moves into position
             ld (hl), e
             inc hl
             ld (hl), d
             ld hl, tracker_channel2_note
-            ld de, tracker_channel2_score
+            ld de, tracker_channel2_score - 2 ; first new note moves into position
             ld (hl), e
             inc hl
             ld (hl), d
             ld hl, tracker_channel3_note
-            ld de, tracker_channel3_score
+            ld de, tracker_channel3_score - 2 ; first new note moves into position
             ld (hl), e
             inc hl
             ld (hl), d
@@ -98,11 +98,23 @@ tracker_play_note:
             call tracker_psg ; no - silence note
             ret
 tracker_play_note_1:
-            ld h, 16 ; use envelope
+            ld d, 11 ; use default volume (store in d)
             bit 1, a ; is channel a new note?
-            jr nz, tracker_play_note_2 ; yes, continue using envelope
-            ld h, 11 ; no, use default volume
+            jr z, tracker_play_note_2 ; no, continue using default volume
+            ld d, 16 ; yes, use envelope (store in d)
+
+            ; also progress note to next
+            push ix
+            pop hl ; hl = current note
+            ld a, (hl)
+            add a,2
+            ld (hl), a
+            jr nc, tracker_play_note_2
+            inc hl ; handle carry
+            inc (hl)
+                        
 tracker_play_note_2
+            ex de, hl ; h = channel volume
             ld a, b ; set channel vol
             call tracker_psg
             ; play note
@@ -124,540 +136,199 @@ tracker_play_note_2
             ld h, e ; course tune
             call tracker_psg
             ex af,af'
-            ; move note to next memory location
-            push ix
-            pop hl ; hl = current note
-            ld a, (hl)
-            add a,2
-            ld (hl), a
-            ret nc
-            inc hl
-            inc (hl)
             ret
 
 tracker_channel1_note:
-dw tracker_channel1_score
+dw tracker_channel1_score - 2 ; first new note moves into position
 tracker_channel2_note:
-dw tracker_channel2_score
+dw tracker_channel2_score - 2 ; first new note moves into position
 tracker_channel3_note:
-dw tracker_channel3_score
+dw tracker_channel3_score - 2 ; first new note moves into position
 tracker_note:
 dw tracker_score
 
 tracker_channel1_score:
 dw g0
+dw g1
+dw g2
+dw g1
 dw g0
 dw g1
-dw g1
 dw g2
-dw g2
-dw g1
 dw g1
 dw g0
+dw g1
+dw g2
+dw g1
 dw g0
 dw g1
-dw g1
 dw g2
-dw g2
-dw g1
-dw g1
-dw g0
-dw g0
-dw g1
-dw g1
-dw g2
-dw g2
-dw g1
-dw g1
-dw g0
-dw g0
-dw g1
-dw g1
-dw g2
-dw g2
-dw g1
 dw g1
 dw f0
+dw f1
+dw f2
+dw f1
 dw f0
 dw f1
-dw f1
-dw f2
 dw f2
 dw f1
-dw f1
-dw f0
-dw f0
-dw f1
-dw f1
-dw f2
-dw f2
-dw f1
-dw f1
-dw g0
 dw g0
 dw g1
-dw g1
 dw g2
-dw g2
-dw g1
 dw g1
 dw g0
+dw g1
+dw g2
+dw g1
 dw g0
 dw g1
-dw g1
 dw g2
-dw g2
-dw g1
 dw g1
 dw g0
+dw g1
+dw g2
+dw g1
 dw g0
 dw g1
-dw g1
 dw g2
-dw g2
-dw g1
 dw g1
 dw g0
-dw g0
-dw g1
 dw g1
 dw g2
-dw g2
-dw g1
-dw g1
-dw g0
-dw g0
-dw g1
-dw g1
-dw g2
-dw g2
-dw g1
-dw g1
-dw g0
-dw g0
-dw g1
-dw g1
-dw g2
-dw g2
-dw g1
 dw g1
 dw f0
+dw f1
+dw f2
+dw f1
 dw f0
 dw f1
-dw f1
-dw f2
 dw f2
 dw f1
-dw f1
-dw f0
-dw f0
-dw f1
-dw f1
-dw f2
-dw f2
-dw f1
-dw f1
-dw g0
 dw g0
 dw g1
-dw g1
 dw g2
-dw g2
-dw g1
 dw g1
 dw g0
-dw g0
-dw g1
 dw g1
 dw g2
-dw g2
-dw g1
 dw g1
 dw d1
+dw d2
+dw d3
+dw d2
 dw d1
 dw d2
-dw d2
 dw d3
-dw d3
-dw d2
 dw d2
 dw d1
+dw d2
+dw d3
+dw d2
 dw d1
 dw d2
-dw d2
 dw d3
-dw d3
-dw d2
-dw d2
-dw d1
-dw d1
-dw d2
-dw d2
-dw d3
-dw d3
-dw d2
-dw d2
-dw d1
-dw d1
-dw d2
-dw d2
-dw d3
-dw d3
-dw d2
 dw d2
 dw c1
+dw c2
+dw c3
+dw c2
 dw c1
 dw c2
-dw c2
-dw c3
 dw c3
 dw c2
-dw c2
-dw c1
-dw c1
-dw c2
-dw c2
-dw c3
-dw c3
-dw c2
-dw c2
-dw g0
 dw g0
 dw g1
-dw g1
 dw g2
-dw g2
-dw g1
 dw g1
 dw g0
-dw g0
-dw g1
 dw g1
 dw g2
-dw g2
-dw g1
 dw g1
 dw d1
+dw d2
+dw d3
+dw d2
 dw d1
 dw d2
-dw d2
 dw d3
-dw d3
-dw d2
 dw d2
 dw d1
+dw d2
+dw d3
+dw d2
 dw d1
 dw d2
-dw d2
 dw d3
-dw d3
-dw d2
-dw d2
-dw d1
-dw d1
-dw d2
-dw d2
-dw d3
-dw d3
-dw d2
-dw d2
-dw d1
-dw d1
-dw d2
-dw d2
-dw d3
-dw d3
-dw d2
 dw d2
 dw f1
+dw f2
+dw f3
+dw f2
 dw f1
 dw f2
-dw f2
-dw f3
 dw f3
 dw f2
-dw f2
-dw f1
-dw f1
-dw f2
-dw f2
-dw f3
-dw f3
-dw f2
-dw f2
-dw g0
 dw g0
 dw g1
-dw g1
 dw g2
-dw g2
-dw g1
 dw g1
 dw g0
-dw g0
-dw g1
 dw g1
 dw g2
-dw g2
-dw g1
 dw g1
 
 tracker_channel2_score:
 dw b2
 dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
 dw a2
 dw b2
-dw b2
 dw c3
-dw c3
-dw c3
-dw c3
-dw c3
-dw c3
-dw c3
-dw c3
-dw c3
-dw c3
-dw c3
-dw c3
-dw d3
-dw d3
-dw d3
 dw d3
 dw c3
 dw b2
-dw b2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
 dw a2
 dw b2
 dw c3
 dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw d3
-dw d3
-dw d3
-dw d3
-dw d3
-dw d3
-dw d3
-dw d3
-dw d3
-dw d3
-dw d3
 dw d3
 dw d3
 dw c3
 dw d3
-dw d3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
 dw e3
 dw f3
-dw f3
-dw f3
-dw f3
 dw e3
 dw d3
-dw d3
-dw c3
-dw c3
 dw c3
 dw c3
 dw b2
-dw b2
-dw a2
-dw a2
 dw a2
 dw a2
 dw g2
 dw f2
-dw f2
-dw g2
-dw g2
-dw g2
-dw g2
-dw g2
-dw g2
-dw g2
-dw g2
-dw g2
-dw g2
-dw g2
 dw g2
 dw b2
-dw b2
 dw a2
 dw g2
 dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw d3
-dw d3
-dw d3
 dw d3
 dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw a2
-dw f3
-dw f3
-dw f3
 dw f3
 dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw c3
-dw c3
-dw c3
 dw c3
 dw d3
 dw c3
 dw d3
-dw d3
-dw d3
-dw d3
-dw d3
-dw d3
-dw d3
-dw d3
-dw d3
-dw d3
-dw b2
 dw b2
 dw a2
 dw g2
 dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw f2
-dw d3
-dw d3
-dw d3
 dw d3
 dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
-dw e3
 dw f3
 dw f3
-dw f3
-dw f3
-dw f3
-dw f3
-dw f3
-dw f3
-dw f3
-dw f3
-dw f3
-dw f3
-dw c3
-dw c3
-dw c3
-dw c3
-dw c3
-dw c3
-dw c3
 dw c3
 dw b2
 dw a2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
-dw b2
 dw b2
 
 tracker_channel3_score:
