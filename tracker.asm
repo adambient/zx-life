@@ -1,6 +1,18 @@
 tracker_note_wait: equ 9 ; wait 0.18 seconds between notes (PAL)
 
 tracker_reset_notes:
+            
+tracker_play:
+            ; load tracker
+            ld hl, tracker_note
+            ld e, (hl)
+            inc hl
+            ld d, (hl)            
+            ex de, hl ; hl = address pointed to by int_tracker_note
+            ld a, (hl) ; a = tracker
+            or a
+            jp m, tracker_play_continue ; check bit 7 for control flag, if not set then reset notes before continuing
+
             ; set all current notes to beginning of scores
             ld hl, tracker_channel1_note
             ld de, tracker_channel1_score - 2 ; first new note moves into position
@@ -21,19 +33,11 @@ tracker_reset_notes:
             ld de, tracker_score
             ld (hl), e
             inc hl
-            ld (hl), d  
-tracker_play:
-            ; load tracker
-            ld hl, tracker_note
-            ld e, (hl)
-            inc hl
-            ld d, (hl)            
+            ld (hl), d
             ex de, hl ; hl = address pointed to by int_tracker_note
-            ; if control bit not set then reset notes before continuing
-            ld a, (hl)
-            bit 7, a
-            jr z, tracker_reset_notes
+            ld a, (hl) ; a = tracker
 
+tracker_play_continue:
             ; play notes based on tracker in a
             push af ; a = tracker
             ex af,af'
@@ -63,7 +67,6 @@ tracker_play:
             ld b, 10 ; channel 3 is regiser 10
             ld ix, tracker_channel3_note ; index current note 3
             call tracker_play_note
-
             ; overall envelope settings
             ld a,11
             ld h,32 ; 11 and 12 govern duration of envelope
@@ -72,8 +75,7 @@ tracker_play:
             call tracker_psg ; send same value to 11
             ld a,13
             ld h,1 ; use envelope 1 (see page 155)
-            call tracker_psg
-                     
+            call tracker_psg                     
             ; move tracker to next memory location
             ld hl, tracker_note
             inc (hl)
@@ -92,29 +94,27 @@ tracker_psg:
 ; inputs - a: tracker, b: register, ix: current note, a':fine tune register (+1 for course tune)
 tracker_play_note:
             bit 0, a ; is channel enabled?
-            jr nz, tracker_play_note_1 ; yes, continue
+            jr nz, tracker_play_note_continue_1 ; yes, continue
             ld a, b
             ld h, 0
             call tracker_psg ; no - silence note
             ret
-tracker_play_note_1:
-            ld d, 11 ; use default volume (store in d)
+tracker_play_note_continue_1:
+            ld c, 11 ; use default volume (store in c)
             bit 1, a ; is channel a new note?
-            jr z, tracker_play_note_2 ; no, continue using default volume
-            ld d, 16 ; yes, use envelope (store in d)
-
+            jr z, tracker_play_note_continue_2 ; no, continue using default volume
+            ld c, 16 ; yes, use envelope (store in c)
             ; also progress note to next
             push ix
             pop hl ; hl = current note
             ld a, (hl)
             add a,2
             ld (hl), a
-            jr nc, tracker_play_note_2
+            jr nc, tracker_play_note_continue_2
             inc hl ; handle carry
-            inc (hl)
-                        
-tracker_play_note_2
-            ex de, hl ; h = channel volume
+            inc (hl)                        
+tracker_play_note_continue_2:
+            ld h, c ; h = channel volume
             ld a, b ; set channel vol
             call tracker_psg
             ; play note
