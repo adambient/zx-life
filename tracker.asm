@@ -10,8 +10,8 @@ tracker_play:
             ld d, (hl)            
             ex de, hl ; hl = address pointed to by int_tracker_note
             ld a, (hl) ; a = tracker
-            or a
-            jp m, tracker_play_continue ; check bit 7 for control flag, if not set then reset notes before continuing
+            or a ; populate flags
+            jr nz, tracker_play_continue ; if empty then reset,else jump to continue
 
             ; set all current notes to beginning of scores
             ld hl, tracker_channel1_note
