@@ -51,9 +51,6 @@ tracker_play_continue:
             rra
             rra ; ...into position 0
             push af
-            ex af,af'
-            ld a, 2
-            ex af,af' ; a' = fine tune register
             ld b, 9 ; channel 2 is regiser 9
             ld ix, tracker_channel2_note ; index current note 2
             call tracker_play_note
@@ -61,9 +58,6 @@ tracker_play_continue:
             pop af ; a = tracker
             rra
             rra ; ...into position 0
-            ex af,af'
-            ld a, 4
-            ex af,af' ; a' = fine tune register
             ld b, 10 ; channel 3 is regiser 10
             ld ix, tracker_channel3_note ; index current note 3
             call tracker_play_note
@@ -98,6 +92,10 @@ tracker_play_note:
             ld a, b
             ld h, 0
             call tracker_psg ; no - silence note
+            ex af,af' ; a = fine tune register
+            inc a
+            inc a ; a = next fine tune register
+            ex af,af'
             ret
 tracker_play_note_continue_1:
             ld c, 11 ; use default volume (store in c)
@@ -135,6 +133,7 @@ tracker_play_note_continue_2:
             inc a ; a = course tune register
             ld h, e ; course tune
             call tracker_psg
+            inc a ; a = next fine tune register
             ex af,af'
             ret
 
