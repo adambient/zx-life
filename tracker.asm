@@ -103,24 +103,18 @@ tracker_play_note_continue_1:
             jr z, tracker_play_note_continue_2 ; no, continue using default volume
             ld c, 16 ; yes, use envelope (store in c)
             ; also progress note to next
-            push ix
-            pop hl ; hl = current note
-            ld a, (hl)
+            ld a, (ix)
             add a,2
-            ld (hl), a
+            ld (ix), a
             jr nc, tracker_play_note_continue_2
-            inc hl ; handle carry
-            inc (hl)                        
+            inc (ix + 1) ; handle carry
 tracker_play_note_continue_2:
             ld h, c ; h = channel volume
             ld a, b ; set channel vol
             call tracker_psg
             ; play note
-            push ix
-            pop hl ; hl = current note
-            ld e, (hl)
-            inc hl
-            ld d, (hl)
+            ld e, (ix)
+            ld d, (ix + 1)
             ex de, hl ; hl = address pointed to by int_channel1_note
             ; ...into d and e...
             ld d, (hl) ; d = rhs - fine tune (rhs as little endian)
