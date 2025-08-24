@@ -8,7 +8,7 @@ tracker_play:
             ld e, (hl)
             inc hl
             ld d, (hl)            
-            ex de, hl ; hl = address pointed to by int_tracker_note
+            ex de, hl ; hl = address pointed to by tracker_note
             ld a, (hl) ; a = tracker
             or a ; populate flags
             jr nz, tracker_play_continue ; if empty then reset,else jump to continue
@@ -19,22 +19,22 @@ tracker_play:
             ld (hl), e
             inc hl
             ld (hl), d
-            ld hl, tracker_channel2_note
+            inc hl ; hl = tracker_channel2_note
             ld de, tracker_channel2_score - 2 ; first new note moves into position
             ld (hl), e
             inc hl
             ld (hl), d
-            ld hl, tracker_channel3_note
+            inc hl ; hl = tracker_channel3_note
             ld de, tracker_channel3_score - 2 ; first new note moves into position
             ld (hl), e
             inc hl
             ld (hl), d
-            ld hl, tracker_note
+            inc hl ; hl = tracker_note
             ld de, tracker_score
             ld (hl), e
             inc hl
             ld (hl), d
-            ex de, hl ; hl = address pointed to by int_tracker_note
+            ex de, hl ; hl = address pointed to by tracker_note
             ld a, (hl) ; a = tracker
 
 tracker_play_continue:
@@ -115,7 +115,7 @@ tracker_play_note_continue_2:
             ; play note
             ld e, (ix)
             ld d, (ix + 1)
-            ex de, hl ; hl = address pointed to by int_channel1_note
+            ex de, hl ; hl = address pointed to by channel1_note
             ; ...into d and e...
             ld d, (hl) ; d = rhs - fine tune (rhs as little endian)
             inc hl
