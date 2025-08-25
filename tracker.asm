@@ -93,8 +93,7 @@ tracker_play_note:
             ld h, 0
             call tracker_psg ; no - silence note
             ex af,af' ; a = fine tune register
-            inc a
-            inc a ; a = next fine tune register
+            add a, 2 ; a = next fine tune register
             ex af,af'
             ret
 tracker_play_note_continue_1:
