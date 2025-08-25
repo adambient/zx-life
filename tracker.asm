@@ -40,11 +40,11 @@ tracker_play:
 tracker_play_continue:
             ; play notes based on tracker in a
             push af ; save a - tracker for channel 2            
-            ex af,af'
-            ld a, 0
-            ex af,af' ; a' = fine tune register
+            exx
+            ld d, 0 ; d' = fine tune register
+            ld hl, tracker_channel1_note ; hl' = current note
+            exx 
             ld b, 8 ; channel 1 is register 8
-            ld ix, tracker_channel1_note ; index current note 1
             call tracker_play_note
             ; channel 2
             pop af ; a = tracker
@@ -52,14 +52,12 @@ tracker_play_continue:
             rra ; ...into position 0
             push af ; save for channel 3
             ld b, 9 ; channel 2 is regiser 9
-            ld ix, tracker_channel2_note ; index current note 2
             call tracker_play_note
             ; channel 3
             pop af ; a = tracker
             rra
             rra ; ...into position 0
             ld b, 10 ; channel 3 is regiser 10
-            ld ix, tracker_channel3_note ; index current note 3
             call tracker_play_note
             ; overall envelope settings
             ld a,11
@@ -85,16 +83,19 @@ tracker_psg:
             out (c),h
             ret
 
-; inputs - a: tracker, b: register, ix: current note, a':fine tune register (+1 for course tune)
+; inputs - a: tracker, b: register, hl': current note, d':fine tune register (+1 for course tune)
 tracker_play_note:
             and %00000011 ; only keep bits 0 and 1 of tracker so can check against 0-3
             jr nz, tracker_play_note_continue_1 ; if result of and is non zero then jump to continue
             ld a, b
             ld h, 0
             call tracker_psg ; no - silence note
-            ex af,af' ; a = fine tune register
-            add a, 2 ; a = next fine tune register
-            ex af,af'
+            exx
+            inc d
+            inc d ; d' = next fine tune register
+            inc hl
+            inc hl ; hl' = next channel note
+            exx
             ret
 tracker_play_note_continue_1:
             ; a is 1-3, quick calc to get relative volume
@@ -104,32 +105,51 @@ tracker_play_note_continue_1:
             cp 13 ; was a=3?
             jr nz, tracker_play_note_continue_2 ; no, continue using default volume
             ld h, 16 ; yes, use envelope (h=16)
+
             ; also progress note to next
-            ld a, (ix)
-            add a,2
-            ld (ix), a
+            exx
+            ld a, (hl)
+            add a, 2
+            ld (hl), a
+            exx ; cannot straddle jumps for some reason            
             jr nc, tracker_play_note_continue_2
-            inc (ix + 1) ; handle carry
+            exx
+            inc hl
+            inc (hl)
+            dec hl ; reset pointer to current channel note
+            exx
+
 tracker_play_note_continue_2:
+
             ld a, b ; set channel vol
             call tracker_psg
+
+            ; load values
+            exx
+            ld a, d ; a = fine tune register
+            inc d 
+            inc d ; d' = next fine tune register
+            push hl ; store current channel note
+            inc hl
+            inc hl ; hl' = next channel note
+            exx
+            pop hl ; hl = current channel note
+
             ; play note
-            ld e, (ix)
-            ld d, (ix + 1)
+            ld e, (hl)
+            inc hl
+            ld d, (hl)
             ex de, hl ; hl = address pointed to by channel1_note
             ; ...into d and e...
             ld d, (hl) ; d = rhs - fine tune (rhs as little endian)
             inc hl
             ld e, (hl) ; e = lhs - course tune (lhs as little endian)
-            ; ...and set registers 0 and 1
-            ex af,af' ; a = fine tune register
+            ; ...and set registers 0 and 1            
             ld h, d ; fine tune
             call tracker_psg
             inc a ; a = course tune register
             ld h, e ; course tune
             call tracker_psg
-            inc a ; a = next fine tune register
-            ex af,af'
             ret
 
 tracker_channel1_note:

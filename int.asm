@@ -4,10 +4,10 @@ int:
             push hl
             push bc
             push de
-            push ix
             push af
-            ex af,af'
-            push af
+            exx
+            push hl
+            push de
 
             ; BEGIN - interrupt routine
             ; wait for tracker_note_wait ticks
@@ -22,10 +22,10 @@ int:
 
 int_end:
             ; retrieve all saved registers
+            pop hl
+            pop de
+            exx
             pop af
-            ex af,af'
-            pop af
-            pop ix
             pop de
             pop bc
             pop hl
