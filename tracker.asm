@@ -99,33 +99,29 @@ tracker_play_note:
             ret
 tracker_play_note_continue_1:
             ; a is 1-3, quick calc to get relative volume
-            add a, a ; a=2/4/6
-            add a, 7 ; a=9/11/13
-            ld h, a ; h=9/11/13
-            cp 13 ; was a=3?
-            jr nz, tracker_play_note_continue_2 ; no, continue using default volume
-            ld h, 16 ; yes, use envelope (h=16)
-
-            ; also progress note to next
+            ld h, a ; 1,2,3
+            add a, h ; 2,4,6
+            add a, h ; 3,6,9
+            add a, h ; 4,8,12
+            add a, h ; 5,10,15
+            inc a ; 6,11,16 (16=use envelope)
+            ld h, a
+            ld a, b ; set channel vol
+            call tracker_psg
+            ld a, h
+            cp 16 ; use envelope?
             exx
+            jr nz, tracker_play_note_continue_2 ; no, continue using default volume
+            ; yes, also progress note to next
             ld a, (hl)
             add a, 2
             ld (hl), a
-            exx ; cannot straddle jumps for some reason            
             jr nc, tracker_play_note_continue_2
-            exx
             inc hl
             inc (hl)
-            dec hl ; reset pointer to current channel note
-            exx
-
-tracker_play_note_continue_2:
-
-            ld a, b ; set channel vol
-            call tracker_psg
-
+            dec hl ; reset pointer to current channel note            
+tracker_play_note_continue_2:           
             ; load values
-            exx
             ld a, d ; a = fine tune register
             inc d 
             inc d ; d' = next fine tune register
