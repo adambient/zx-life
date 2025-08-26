@@ -40,11 +40,11 @@ tracker_play:
 tracker_play_continue:
             ; play notes based on tracker in a
             push af ; save a - tracker for channel 2            
+            ld b, 8 ; channel 1 is register 8
             exx
             ld d, 0 ; d' = fine tune register
-            ld hl, tracker_channel1_note ; hl' = current note
-            exx 
-            ld b, 8 ; channel 1 is register 8
+            ld hl, tracker_channel1_note ; hl' = current channel note
+            exx             
             call tracker_play_note
             ; channel 2
             pop af ; a = tracker
@@ -52,12 +52,20 @@ tracker_play_continue:
             rra ; ...into position 0
             push af ; save for channel 3
             ld b, 9 ; channel 2 is regiser 9
+            exx
+            ld d, 2 ; d' = next fine tune register
+            ld hl, tracker_channel2_note ; hl' = current channel note
+            exx
             call tracker_play_note
             ; channel 3
             pop af ; a = tracker
             rra
             rra ; ...into position 0
             ld b, 10 ; channel 3 is regiser 10
+            exx
+            ld d, 4 ; d' = next fine tune register
+            ld hl, tracker_channel3_note ; hl' = current channel note
+            exx
             call tracker_play_note
             ; overall envelope settings
             ld a,11
@@ -90,12 +98,6 @@ tracker_play_note:
             ld a, b
             ld h, 0
             call tracker_psg ; no - silence note
-            exx
-            inc d
-            inc d ; d' = next fine tune register
-            inc hl
-            inc hl ; hl' = next channel note
-            exx
             ret
 tracker_play_note_continue_1:
             ; a is 1-3, quick calc to get relative volume
@@ -110,8 +112,10 @@ tracker_play_note_continue_1:
             call tracker_psg
             ld a, h
             cp 16 ; use envelope?
+
             exx
-            jr nz, tracker_play_note_continue_2 ; no, continue using default volume
+            push hl ; store current channel note
+            jr nz, tracker_play_note_continue_2 ; use envelope? no, continue using default volume
             ; yes, also progress note to next
             ld a, (hl)
             add a, 2
@@ -119,19 +123,14 @@ tracker_play_note_continue_1:
             jr nc, tracker_play_note_continue_2
             inc hl
             inc (hl)
-            dec hl ; reset pointer to current channel note            
 tracker_play_note_continue_2:           
             ; load values
             ld a, d ; a = fine tune register
-            inc d 
-            inc d ; d' = next fine tune register
-            push hl ; store current channel note
-            inc hl
-            inc hl ; hl' = next channel note
             exx
+
             pop hl ; hl = current channel note
 
-            ; play note
+            ; retrieve current note...
             ld e, (hl)
             inc hl
             ld d, (hl)
