@@ -111,9 +111,7 @@ tracker_play_note_continue_1:
             call tracker_psg
             ld a, h
             cp 16 ; use envelope?
-
-            exx
-            push hl ; store current channel note
+            exx ; use shadow registers (until end)
             jr nz, tracker_play_note_continue_2 ; use envelope? no, continue using default volume
             ; yes, also progress note to next
             ld a, (hl)
@@ -122,13 +120,10 @@ tracker_play_note_continue_1:
             jr nc, tracker_play_note_continue_2
             inc hl
             inc (hl)
+            dec hl ; reset pointer to current note
 tracker_play_note_continue_2:           
             ; load values
             ld a, d ; a = fine tune register
-            exx
-
-            pop hl ; hl = current channel note
-
             ; retrieve current note...
             ld e, (hl)
             inc hl
@@ -144,6 +139,7 @@ tracker_play_note_continue_2:
             inc a ; a = course tune register
             ld h, e ; course tune
             call tracker_psg
+            exx
             ret
 
 tracker_channel1_note:
