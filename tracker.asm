@@ -102,9 +102,8 @@ tracker_play_note:
 tracker_play_note_continue_1:
             ; a is 1-3, quick calc to get relative volume
             ld h, a ; 1,2,3
-            add a, h ; 2,4,6
-            add a, h ; 3,6,9
-            add a, h ; 4,8,12
+            add a, a ; 2,4,6
+            add a, a ; 4,8,12
             add a, h ; 5,10,15
             inc a ; 6,11,16 (16=use envelope)
             ld h, a
