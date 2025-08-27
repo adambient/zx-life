@@ -1,6 +1,10 @@
 tracker_note_wait: equ 10 ; wait 0.2 seconds between notes (PAL)
           
 tracker_play:
+
+            ; opt - c never changes, weirdly (used in tracker_psg only)
+            ld c, $fd
+
             ; load tracker
             ld hl, tracker_note
             ld e, (hl)
@@ -74,7 +78,7 @@ tracker_play_continue:
             ret
 
 tracker_psg:
-            ld bc,$fffd
+            ld b,$ff
             out (c),a
             ld b,$bf
             out (c),h
