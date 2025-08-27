@@ -39,33 +39,24 @@ tracker_play:
 
 tracker_play_continue:
             ; play notes based on tracker in a
-            push af ; save a - tracker for channel 2            
-            ld b, 8 ; channel 1 is register 8
-            exx
-            ld d, 0 ; d' = fine tune register
-            ld hl, tracker_channel1_note ; hl' = current channel note
-            exx             
+            push af ; save a - tracker for channel 2                        
+            ld de, $0800 ; d = channel 1 volume regiser (8), e = channel 1 fine tune register (0)
+            ld hl, tracker_channel1_note ; hl = channel 1 current note
             call tracker_play_note
             ; channel 2
             pop af ; a = tracker
             rra
             rra ; ...into position 0
-            push af ; save for channel 3
-            ld b, 9 ; channel 2 is regiser 9
-            exx
-            ld d, 2 ; d' = next fine tune register
-            ld hl, tracker_channel2_note ; hl' = current channel note
-            exx
+            push af ; save for channel 3            
+            ld de, $0902 ; d = channel 2 volume regiser (9), e = channel 2 fine tune register (2)
+            ld hl, tracker_channel2_note ; hl = channel 2 current note
             call tracker_play_note
             ; channel 3
             pop af ; a = tracker
             rra
             rra ; ...into position 0
-            ld b, 10 ; channel 3 is regiser 10
-            exx
-            ld d, 4 ; d' = next fine tune register
-            ld hl, tracker_channel3_note ; hl' = current channel note
-            exx
+            ld de, $0a04 ; d = channel 3 volume regiser (10), e = channel 3 fine tune register (4)
+            ld hl, tracker_channel3_note ; hl = channel 3 current note
             call tracker_play_note
             ; overall envelope settings
             ld a,11
@@ -91,13 +82,15 @@ tracker_psg:
             out (c),h
             ret
 
-; inputs - a: tracker, b: register, hl': current note, d':fine tune register (+1 for course tune)
+; inputs - a: tracker, d: channel volume register, e: channel fine tune register, hl: channel current note
 tracker_play_note:
+            push hl ; store current note
             and %00000011 ; only keep bits 0 and 1 of tracker so can check against 0-3
             jr nz, tracker_play_note_continue_1 ; if result of and is non zero then jump to continue
-            ld a, b
+            ld a, d
             ld h, 0
             call tracker_psg ; no - silence note
+            pop hl ; restore current note
             ret
 tracker_play_note_continue_1:
             ; a is 1-3, quick calc to get relative volume
@@ -107,11 +100,11 @@ tracker_play_note_continue_1:
             add a, h ; 5,10,15
             inc a ; 6,11,16 (16=use envelope)
             ld h, a
-            ld a, b ; set channel vol
+            ld a, d ; set channel vol
             call tracker_psg
             ld a, h
             cp 16 ; use envelope?
-            exx ; use shadow registers (until end)
+            pop hl ; restore current note
             jr nz, tracker_play_note_continue_2 ; use envelope? no, continue using default volume
             ; yes, also progress note to next
             ld a, (hl)
@@ -123,7 +116,7 @@ tracker_play_note_continue_1:
             dec hl ; reset pointer to current note
 tracker_play_note_continue_2:           
             ; load values
-            ld a, d ; a = fine tune register
+            ld a, e ; a = fine tune register
             ; retrieve current note...
             ld e, (hl)
             inc hl
@@ -139,7 +132,6 @@ tracker_play_note_continue_2:
             inc a ; a = course tune register
             ld h, e ; course tune
             call tracker_psg
-            exx
             ret
 
 tracker_channel1_note:

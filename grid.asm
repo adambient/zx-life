@@ -41,9 +41,9 @@ set_grid_value:
             ld d, $00 ; de = grid value
 
             ld a, e ; a = grid value
-            ex af, af' ; store a
+            push af  ; store a
             call load_cell_location ; load cell location bc into hl
-            ex af, af' ; retrieve a            
+            pop af ; retrieve a            
             bit $00, c ; is x even?
             jr z, set_grid_value_even
             or a ; clear carry so doesn't get rotated into number
