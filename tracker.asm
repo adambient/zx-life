@@ -1,7 +1,5 @@
 tracker_note_wait: equ 10 ; wait 0.2 seconds between notes (PAL)
-
-tracker_reset_notes:
-            
+          
 tracker_play:
             ; load tracker
             ld hl, tracker_note
