@@ -82,15 +82,15 @@ tracker_psg:
 
 ; inputs - a: tracker, d: channel volume register, e: channel fine tune register, hl: channel current note
 tracker_play_note:
-            push hl ; store current note
+            
             and %00000011 ; only keep bits 0 and 1 of tracker so can check against 0-3
             jr nz, tracker_play_note_continue_1 ; if result of and is non zero then jump to continue
             ld a, d
             ld h, 0
-            call tracker_psg ; no - silence note
-            pop hl ; restore current note
+            call tracker_psg ; no - silence note            
             ret
 tracker_play_note_continue_1:
+            push hl ; store current note
             ; a is 1-3, quick calc to get relative volume
             ld h, a ; 1,2,3
             add a, a ; 2,4,6
