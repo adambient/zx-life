@@ -5,6 +5,7 @@ org  28160
 ; initialize mixer to all notes but no noises
 ld a, 7
 ld h, %00111000
+ld c, $fd
 call tracker_psg
 
 ; initialize interrupts
