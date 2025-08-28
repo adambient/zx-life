@@ -94,11 +94,9 @@ tracker_play_note:
 tracker_play_note_continue_1:
             push hl ; store current note
             ; a is 1-3, quick calc to get relative volume
-            ld h, a ; 1,2,3
-            add a, a ; 2,4,6
-            add a, a ; 4,8,12
-            add a, h ; 5,10,15
-            inc a ; 6,11,16 (16=use envelope)
+            inc a ; 2,3,4
+            add a, a ; 4,6,8
+            add a, a ; 8,12,16 (16=use envelope)
             ld h, a
             ld a, d ; set channel vol
             call tracker_psg
