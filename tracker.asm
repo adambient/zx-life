@@ -92,17 +92,18 @@ tracker_play_note:
             call tracker_psg ; no - silence note            
             ret
 tracker_play_note_continue_1:
-            push hl ; store current note
             ; a is 1-3, quick calc to get relative volume
             inc a ; 2,3,4
             add a, a ; 4,6,8
             add a, a ; 8,12,16 (16=use envelope)
-            ld h, a
-            ld a, d ; set channel vol
-            call tracker_psg
-            ld a, h
+
+            ; opt - call psg inline so can use registers to hand
+            ld b,$ff
+            out (c),d ; channel volume register
+            ld b,$bf
+            out (c),a ; volume
+
             cp 16 ; use envelope?
-            pop hl ; restore current note
             jr nz, tracker_play_note_continue_2 ; use envelope? no, continue using default volume
             ; yes, also progress note to next
             ld a, (hl)
