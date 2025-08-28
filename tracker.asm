@@ -6,11 +6,7 @@ tracker_play:
             ld c, $fd
 
             ; load tracker
-            ld hl, tracker_note
-            ld e, (hl)
-            inc hl
-            ld d, (hl)            
-            ex de, hl ; hl = address pointed to by tracker_note
+            ld hl, (tracker_note)
             ld a, (hl) ; a = tracker
             or a ; populate flags
             jr nz, tracker_play_continue ; if empty then reset,else jump to continue
@@ -41,22 +37,24 @@ tracker_play:
 
 tracker_play_continue:
             ; play notes based on tracker in a
-            push af ; save a - tracker for channel 2                        
             ld de, $0800 ; d = channel 1 volume regiser (8), e = channel 1 fine tune register (0)
             ld hl, tracker_channel1_note ; hl = channel 1 current note
             call tracker_play_note
             ; channel 2
-            pop af ; a = tracker
-            rra
-            rra ; ...into position 0
-            push af ; save for channel 3            
+            ld hl, (tracker_note)
+            ld a, (hl) ; a = tracker
+            rrca
+            rrca ; ch2 into position 0
             ld de, $0902 ; d = channel 2 volume regiser (9), e = channel 2 fine tune register (2)
             ld hl, tracker_channel2_note ; hl = channel 2 current note
             call tracker_play_note
             ; channel 3
-            pop af ; a = tracker
-            rra
-            rra ; ...into position 0
+            ld hl, (tracker_note)
+            ld a, (hl) ; a = tracker
+            rrca
+            rrca
+            rrca
+            rrca ; ch3 into position 0
             ld de, $0a04 ; d = channel 3 volume regiser (10), e = channel 3 fine tune register (4)
             ld hl, tracker_channel3_note ; hl = channel 3 current note
             call tracker_play_note
