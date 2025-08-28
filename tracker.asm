@@ -64,7 +64,7 @@ tracker_play_continue:
             call tracker_psg 
             inc a            
             call tracker_psg ; send same value to 11
-            ld a,13
+            inc a
             ld h,1 ; use envelope 1 (see page 155)
             call tracker_psg                     
             ; move tracker to next memory location
