@@ -1,16 +1,16 @@
 tracker_note_wait: equ 10 ; wait 0.2 seconds between notes (PAL)
-          
+
+;-------------
+; tracker_play
+;-------------
 tracker_play:
-
-            ; opt - c never changes, weirdly (used in tracker_psg only)
+            ; opt - c never changes, weirdly (used in psg calls only)
             ld c, $fd
-
             ; load tracker
             ld hl, (tracker_note)
             ld a, (hl) ; a = tracker
             or a ; populate flags
-            jr nz, tracker_play_continue ; if empty then reset,else jump to continue
-
+            jr nz, tracker_play_continue ; if empty then reset, else jump to continue
             ; set all current notes to beginning of scores
             ld hl, tracker_channel1_score - 2 ; first new note moves into position
             ld (tracker_channel1_note), hl
@@ -21,7 +21,6 @@ tracker_play:
             ld hl, tracker_score
             ld (tracker_note), hl
             ld a, (hl) ; a = tracker
-
 tracker_play_continue:
             ; play notes based on tracker in a
             ld de, $0800 ; d = channel 1 volume regiser (8), e = channel 1 fine tune register (0)
@@ -48,12 +47,21 @@ tracker_play_continue:
             ; overall envelope settings
             ld a,11
             ld h,32 ; 11 and 12 govern duration of envelope
-            call tracker_psg 
+            ld b,$ff
+            out (c),a
+            ld b,$bf
+            out (c),h ; psg
             inc a            
-            call tracker_psg ; send same value to 11
+            ld b,$ff
+            out (c),a
+            ld b,$bf
+            out (c),h ; psg
             inc a
             ld h,1 ; use envelope 1 (see page 155)
-            call tracker_psg                     
+            ld b,$ff
+            out (c),a
+            ld b,$bf
+            out (c),h ; psg
             ; move tracker to next memory location
             ld hl, tracker_note
             inc (hl)
@@ -62,34 +70,29 @@ tracker_play_continue:
             inc (hl)
             ret
 
-tracker_psg:
+;-------------
+; tracker_play_note
+; inputs - a: tracker, d: channel volume register, e: channel fine tune register, hl: channel current note
+;-------------
+tracker_play_note: 
+            and %00000011 ; only keep bits 0 and 1 of tracker so can check against 0-3
+            jr nz, tracker_play_note_continue_1 ; if result of and is non zero then jump to continue
+            ld a, d ; no - silence note
+            ld h, 0
             ld b,$ff
             out (c),a
             ld b,$bf
-            out (c),h
-            ret
-
-; inputs - a: tracker, d: channel volume register, e: channel fine tune register, hl: channel current note
-tracker_play_note:
-            
-            and %00000011 ; only keep bits 0 and 1 of tracker so can check against 0-3
-            jr nz, tracker_play_note_continue_1 ; if result of and is non zero then jump to continue
-            ld a, d
-            ld h, 0
-            call tracker_psg ; no - silence note            
+            out (c),h ; psg
             ret
 tracker_play_note_continue_1:
             ; a is 1-3, quick calc to get relative volume
             inc a ; 2,3,4
             add a, a ; 4,6,8
             add a, a ; 8,12,16 (16=use envelope)
-
-            ; opt - call psg inline so can use registers to hand
             ld b,$ff
-            out (c),d ; channel volume register
+            out (c), d
             ld b,$bf
-            out (c),a ; volume
-
+            out (c), a ; psg
             cp 16 ; use envelope?
             jr nz, tracker_play_note_continue_2 ; use envelope? no, continue using default volume
             ; yes, also progress note to next
@@ -112,12 +115,16 @@ tracker_play_note_continue_2:
             ld d, (hl) ; d = rhs - fine tune (rhs as little endian)
             inc hl
             ld e, (hl) ; e = lhs - course tune (lhs as little endian)
-            ; ...and set registers 0 and 1            
-            ld h, d ; fine tune
-            call tracker_psg
+            ; ...and set fine/course tune registers
+            ld b,$ff
+            out (c), a
+            ld b,$bf
+            out (c), d ; psg
             inc a ; a = course tune register
-            ld h, e ; course tune
-            call tracker_psg
+            ld b,$ff
+            out (c), a
+            ld b,$bf
+            out (c), e ; psg
             ret
 
 tracker_channel1_note:

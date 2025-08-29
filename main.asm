@@ -6,7 +6,10 @@ org  28160
 ld a, 7
 ld h, %00111000
 ld c, $fd
-call tracker_psg
+ld b, $ff
+out (c), a
+ld b, $bf
+out (c), h ; psg
 
 ; initialize interrupts
 di ; disables interrupts
