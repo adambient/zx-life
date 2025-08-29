@@ -9,7 +9,9 @@ int:
             ld a, (hl) ; into a
             dec (hl) ; decrease count
             jr nz, int_end ; end if not zero
-            ld (hl), tracker_note_wait ; reset count            
+
+            ld a, (tracker_note_wait)
+            ld (hl), a ; reset count
 
             call tracker_play ; call tracker to play next notes
             ; END - interrupt routine
@@ -22,7 +24,7 @@ int_end:
 ei ; activates interruptions
 reti ; exits
 
-int_count:  db tracker_note_wait ; count between notes
+int_count:  db 1 ; count between notes
 
 ;-------------
 ; tracker_play
@@ -36,13 +38,13 @@ tracker_play:
             or a ; populate flags
             jr nz, tracker_play_continue ; if empty then reset, else jump to continue
             ; set all current notes to beginning of scores
-            ld hl, tracker_channel1_score - 2 ; first new note moves into position
+            ld hl, (tracker_channel1_start)
             ld (tracker_channel1_note), hl
-            ld hl, tracker_channel2_score - 2 ; first new note moves into position
+            ld hl, (tracker_channel2_start)
             ld (tracker_channel2_note), hl
-            ld hl, tracker_channel3_score - 2 ; first new note moves into position
+            ld hl, (tracker_channel3_start)
             ld (tracker_channel3_note), hl
-            ld hl, tracker_score
+            ld hl, (tracker_start)
             ld (tracker_note), hl
             ld a, (hl) ; a = tracker
 tracker_play_continue:

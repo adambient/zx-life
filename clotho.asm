@@ -1,12 +1,21 @@
-tracker_note_wait: equ 10 ; wait 0.2 seconds between notes (PAL)
-
+tracker_note_wait:
+db 10 ; wait 0.2 seconds between notes (PAL)
 tracker_channel1_note:
-dw tracker_channel1_score - 2 ; first new note moves into position
+dw $0000
 tracker_channel2_note:
-dw tracker_channel2_score - 2 ; first new note moves into position
+dw $0000
 tracker_channel3_note:
-dw tracker_channel3_score - 2 ; first new note moves into position
+dw $0000
 tracker_note:
+dw tracker_score_end
+
+tracker_channel1_start:
+dw tracker_channel1_score - 2 ; first new note moves into position
+tracker_channel2_start:
+dw tracker_channel2_score - 2 ; first new note moves into position
+tracker_channel3_start:
+dw tracker_channel3_score - 2 ; first new note moves into position
+tracker_start:
 dw tracker_score
 
 tracker_channel1_score:
@@ -805,4 +814,5 @@ db %10001010
 db %10001010
 db %10001010
 db %10001010
+tracker_score_end:
 db %00000000 ; end
