@@ -2,7 +2,7 @@ include "consts.asm"
 
 org  28160
 
-; initialize mixer to all notes but no noises
+; initialize ay mixer to all notes but no noises
 ld a, 7
 ld h, %00111000
 ld c, $fd
@@ -108,7 +108,7 @@ include "game.asm"
 count: ds 1
 message: ds MAX_MSG_LENGTH+1
 
-include "tracker.asm" ; ay music tracker
+include "clotho.asm" ; ay music for "clotho"
 
 org 32348 ; interrupt code at specified (above) address
 include "int.asm"
