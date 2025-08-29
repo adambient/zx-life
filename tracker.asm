@@ -12,27 +12,14 @@ tracker_play:
             jr nz, tracker_play_continue ; if empty then reset,else jump to continue
 
             ; set all current notes to beginning of scores
-            ld hl, tracker_channel1_note
-            ld de, tracker_channel1_score - 2 ; first new note moves into position
-            ld (hl), e
-            inc hl
-            ld (hl), d
-            inc hl ; hl = tracker_channel2_note
-            ld de, tracker_channel2_score - 2 ; first new note moves into position
-            ld (hl), e
-            inc hl
-            ld (hl), d
-            inc hl ; hl = tracker_channel3_note
-            ld de, tracker_channel3_score - 2 ; first new note moves into position
-            ld (hl), e
-            inc hl
-            ld (hl), d
-            inc hl ; hl = tracker_note
-            ld de, tracker_score
-            ld (hl), e
-            inc hl
-            ld (hl), d
-            ex de, hl ; hl = address pointed to by tracker_note
+            ld hl, tracker_channel1_score - 2 ; first new note moves into position
+            ld (tracker_channel1_note), hl
+            ld hl, tracker_channel2_score - 2 ; first new note moves into position
+            ld (tracker_channel2_note), hl
+            ld hl, tracker_channel3_score - 2 ; first new note moves into position
+            ld (tracker_channel3_note), hl
+            ld hl, tracker_score
+            ld (tracker_note), hl
             ld a, (hl) ; a = tracker
 
 tracker_play_continue:
