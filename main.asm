@@ -108,7 +108,8 @@ include "game.asm"
 count: ds 1
 message: ds MAX_MSG_LENGTH+1
 
-include "clotho.asm" ; ay music for "clotho"
+;include "clotho.asm" ; ay music for "clotho"
+include "hubbard.asm" ; ay music for dragon's lair 2
 
 org 32348 ; interrupt code at specified (above) address
 include "int.asm"
