@@ -179,7 +179,7 @@ dw f2
 dw g2
 dw b2
 dw a2
-dw g1
+dw g2
 dw f2
 dw d3
 dw a2
@@ -191,7 +191,7 @@ dw c3
 dw d3
 dw b2
 dw a2
-dw g1
+dw g2
 dw f2
 dw d3
 dw e3
